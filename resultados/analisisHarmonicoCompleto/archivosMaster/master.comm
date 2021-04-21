@@ -1,0 +1,152 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     FORMAT='MED',
+                     UNITE=20)
+
+modelV = AFFE_MODELE(identifier='1:1',
+                     AFFE=_F(MODELISATION=('POU_D_E', ),
+                             PHENOMENE='MECANIQUE',
+                             TOUT='OUI'),
+                     MAILLAGE=mesh)
+
+elemproV = AFFE_CARA_ELEM(identifier='2:1',
+                          MODELE=modelV,
+                          POUTRE=_F(CARA=('IZ', 'A', 'IY', 'JX'),
+                                    GROUP_MA=('edges', ),
+                                    SECTION='GENERALE',
+                                    VALE=(1.25e-12, 1.5e-05, 1.0, 1.0)))
+
+acero = DEFI_MATERIAU(identifier='3:1',
+                      ELAS=_F(E=210000000000.0,
+                              NU=0.33,
+                              RHO=7850.0))
+
+fieldma0 = AFFE_MATERIAU(identifier='4:1',
+                         AFFE=_F(GROUP_MA=('edges', ),
+                                 MATER=(acero, )),
+                         MAILLAGE=mesh,
+                         MODELE=modelV)
+
+BIDIZ = AFFE_CHAR_MECA(identifier='5:1',
+                       DDL_IMPO=(_F(DRZ=0.0,
+                                    DX=0.0,
+                                    DY=0.0,
+                                    GROUP_NO=('CC', )),
+                                 _F(DRX=0.0,
+                                    DRY=0.0,
+                                    DZ=0.0,
+                                    TOUT='OUI')),
+                       MODELE=modelV)
+
+ASSEMBLAGE(identifier='6:1',
+           CARA_ELEM=elemproV,
+           CHAM_MATER=fieldma0,
+           CHARGE=(BIDIZ, ),
+           MATR_ASSE=(_F(MATRICE=CO('K'),
+                         OPTION='RIGI_MECA'),
+                      _F(MATRICE=CO('M'),
+                         OPTION='MASS_MECA')),
+           MODELE=modelV,
+           NUME_DDL=CO('nddl'))
+
+modes = CALC_MODES(identifier='9:1',
+                   CALC_FREQ=_F(NMAX_FREQ=11),
+                   MATR_MASS=M,
+                   MATR_RIGI=K,
+                   OPTION='PLUS_PETITE')
+
+
+ACCE = FORMULE(identifier='0:2',
+               NOM_PARA=('INST', ),
+               VALE='cargaArmonica*sin(91.18478288034662*INST)')
+
+tiempo = DEFI_LIST_REEL(identifier='1:2',
+                        DEBUT=0.0,
+                        INTERVALLE=_F(JUSQU_A=5.0,
+                                      NOMBRE=1000000))
+
+
+tiempoRe = DEFI_LIST_REEL(identifier='4:2',
+                          DEBUT=0.0,
+                          INTERVALLE=_F(JUSQU_A=0.5,
+                                        NOMBRE=1000))
+
+
+freqList = DEFI_LIST_REEL(identifier='7:2',
+                          DEBUT=0.0,
+                          INTERVALLE=_F(JUSQU_A=300.0,
+                                        PAS=0.5))
+
+MULT_Y = CALC_CHAR_SEISME(identifier='8:2',
+                          DIRECTION=(0.0, 1.0, 0.0),
+                          MATR_MASS=M,
+                          MONO_APPUI='OUI')
+
+listr = CALC_AMOR_MODAL(identifier='9:2',
+                        AMOR_RAYLEIGH=_F(AMOR_ALPHA=masterAlfa,
+                                         AMOR_BETA=masterBeta,
+                                         MODE_MECA=modes))
+
+matC = COMB_MATR_ASSE(identifier='10:2',
+                      COMB_R=(_F(COEF_R=masterAlfa,
+                                 MATR_ASSE=K),
+                              _F(COEF_R=masterBeta,
+                                 MATR_ASSE=M)))
+
+PROJ_BASE(identifier='11:2',
+          BASE=modes,
+          MATR_ASSE_GENE=(_F(MATRICE=CO('MG'),
+                             MATR_ASSE=M),
+                          _F(MATRICE=CO('KG'),
+                             MATR_ASSE=K),
+                          _F(MATRICE=CO('CG'),
+                             MATR_ASSE=matC)),
+          VECT_ASSE_GENE=_F(TYPE_VECT='FORC',
+                            VECTEUR=CO('VECT_Y'),
+                            VECT_ASSE=MULT_Y))
+
+
+harm = DYNA_VIBRA(identifier='17:2',
+                  BASE_CALCUL='GENE',
+                  EXCIT=_F(COEF_MULT=cargaArmonica,
+                           VECT_ASSE_GENE=VECT_Y),
+                  LIST_FREQ=freqList,
+                  MATR_AMOR=CG,
+                  MATR_MASS=MG,
+                  MATR_RIGI=KG,
+                  TYPE_CALCUL='HARM')
+
+
+resHarm = REST_GENE_PHYS(identifier='19:2',
+                         GROUP_NO=('N2', 'N3'),
+                         LIST_FREQ=freqList,
+                         RESU_GENE=harm,
+                         TOUT_CHAM='OUI')
+
+
+FREQn2 = RECU_FONCTION(identifier='28:2',
+                      GROUP_NO=('N2', ),
+                      LIST_FREQ=freqList,
+                      NOM_CHAM='ACCE',
+                      NOM_CMP='DY',
+                      RESULTAT=resHarm)
+
+FREQn3 = RECU_FONCTION(identifier='28:2',
+                      GROUP_NO=('N3', ),
+                      LIST_FREQ=freqList,
+                      NOM_CHAM='ACCE',
+                      NOM_CMP='DY',
+                      RESULTAT=resHarm)
+
+
+IMPR_FONCTION(identifier='29:2',
+              COURBE=(_F(FONCTION=FREQn2,
+                        LIST_PARA=freqList),
+		      _F(FONCTION=FREQn3)), 	
+              FORMAT='TABLEAU',
+              SEPARATEUR=' ,',
+              UNITE=8)
+
+FIN()

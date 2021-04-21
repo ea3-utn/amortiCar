@@ -1,0 +1,28 @@
+P actions make_etude
+P debug nodebug
+P memjob 2097152
+P memory_limit 2048.0
+P mode interactif
+P mpi_nbcpu 1
+P mpi_nbnoeud 1
+P ncpus 0
+P nomjob analisisArmonicoCompleto
+P origine AsterStudy 0.11
+P rep_trav /tmp/nico-debianThinkpadx230-interactif_12408
+P server localhost
+P studyid 7791-0004-debianThinkpadx230
+P time_limit 900.0
+P tpsjob 16
+P version stable
+A memjeveux 256.0
+A tpmax 900.0
+F comm DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/programaArmonico.comm D  1
+F libr DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/_malla.med D  20
+F libr DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/resultados/modosNavier.med R  5
+F libr DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/resultados/noUtilnodosDY.resu R  2
+F libr DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/resultados/harmonic.resu R  80
+F libr DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/resultados/resuAster.resu R  3
+F libr DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/resultados/deformadaDynaVibra.med R  4
+F libr DIRECTORIO_TRABAJO/resultados/visualizacionOctave/plotFreq.resu R  8
+F mess DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/resultados/message R  6
+R base DIRECTORIO_TRABAJO/resultados/analisisHarmonicoCompleto/base-stage2 R  0

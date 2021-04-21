@@ -1,0 +1,20 @@
+
+ --------------------------------------------------------------------------------
+ ASTER 14.04.00 CONCEPT resHarm CALCULE LE 19/04/2021 A 22:28:42 DE TYPE         
+ DYNA_HARMO                                                                      
+
+                    ENTITES TOPOLOGIQUES SELECTIONNEES 
+ GROUP_NO : N2 N3                                                                
+
+
+ ======>
+
+ ------>
+ CHAMP AUX NOEUDS DE NOM SYMBOLIQUE  ACCE                                        
+ NUMERO D'ORDRE: 1 FREQ:   1.45125089301684E+01                                  
+ NOEUD                 DY      
+ N3        3.36252417000616E-03
+          -5.57338729103153E-01
+ N2       -4.42143108458758E-03
+          -1.64109770235311E+00
+ 

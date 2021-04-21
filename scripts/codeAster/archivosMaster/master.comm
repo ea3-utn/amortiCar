@@ -1,0 +1,119 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     FORMAT='MED',
+                     UNITE=20)
+
+modelV = AFFE_MODELE(identifier='1:1',
+                     AFFE=_F(MODELISATION=('POU_D_E', ),
+                             PHENOMENE='MECANIQUE',
+                             TOUT='OUI'),
+                     MAILLAGE=mesh)
+
+elemproV = AFFE_CARA_ELEM(identifier='2:1',
+                          MODELE=modelV,
+                          POUTRE=_F(CARA=('IZ', 'A', 'IY', 'JX'),
+                                    GROUP_MA=('edges', ),
+                                    SECTION='GENERALE',
+                                    VALE=(1.25e-12, 1.5e-05, 1.0, 1.0)))
+
+acero = DEFI_MATERIAU(identifier='3:1',
+                      ELAS=_F(E=210000000000.0,
+                              NU=0.33,
+                              RHO=7850.0))
+
+fieldma0 = AFFE_MATERIAU(identifier='4:1',
+                         AFFE=_F(GROUP_MA=('edges', ),
+                                 MATER=(acero, )),
+                         MAILLAGE=mesh,
+                         MODELE=modelV)
+
+BIDIZ = AFFE_CHAR_MECA(identifier='5:1',
+                       DDL_IMPO=(_F(DRZ=0.0,
+                                    DX=0.0,
+                                    DY=0.0,
+                                    GROUP_NO=('CC', )),
+                                 _F(DRX=0.0,
+                                    DRY=0.0,
+                                    DZ=0.0,
+                                    TOUT='OUI')),
+                       MODELE=modelV)
+
+ASSEMBLAGE(identifier='6:1',
+           CARA_ELEM=elemproV,
+           CHAM_MATER=fieldma0,
+           CHARGE=(BIDIZ, ),
+           MATR_ASSE=(_F(MATRICE=CO('K'),
+                         OPTION='RIGI_MECA'),
+                      _F(MATRICE=CO('M'),
+                         OPTION='MASS_MECA')),
+           MODELE=modelV,
+           NUME_DDL=CO('nddl'))
+
+modes = CALC_MODES(identifier='9:1',
+                   CALC_FREQ=_F(NMAX_FREQ=11),
+                   MATR_MASS=M,
+                   MATR_RIGI=K,
+                   OPTION='PLUS_PETITE')
+
+
+MULT_Y = CALC_CHAR_SEISME(identifier='7:2',
+                          DIRECTION=(0.0, 1.0, 0.0),
+                          MATR_MASS=M,
+                          MONO_APPUI='OUI')
+
+
+listr = CALC_AMOR_MODAL(identifier='9:2',
+                        AMOR_RAYLEIGH=_F(AMOR_ALPHA=masterAlfa,
+                                         AMOR_BETA=masterBeta,
+                                         MODE_MECA=modes))
+
+matC = COMB_MATR_ASSE(identifier='9:2',
+                      COMB_R=(_F(COEF_R=masterAlfa,
+                                 MATR_ASSE=K),
+                              _F(COEF_R=masterBeta,
+                                 MATR_ASSE=M)))
+
+PROJ_BASE(identifier='10:2',
+          BASE=modes,
+          MATR_ASSE_GENE=(_F(MATRICE=CO('MG'),
+                             MATR_ASSE=M),
+                          _F(MATRICE=CO('KG'),
+                             MATR_ASSE=K),
+                          _F(MATRICE=CO('CG'),
+                             MATR_ASSE=matC)),
+          VECT_ASSE_GENE=_F(TYPE_VECT='FORC',
+                            VECTEUR=CO('VECT_Y'),
+                            VECT_ASSE=MULT_Y))
+
+
+harm = DYNA_VIBRA(identifier='14:2',
+                  BASE_CALCUL='GENE',
+                  EXCIT=_F(COEF_MULT=masterCarga,
+                           VECT_ASSE_GENE=VECT_Y),
+                  FREQ=(masterFrecuencia, ),
+                  MATR_AMOR=CG,
+                  MATR_MASS=MG,
+                  MATR_RIGI=KG,
+                  TYPE_CALCUL='HARM')
+
+
+resHarm = REST_GENE_PHYS(identifier='16:2',
+                         FREQ=(masterFrecuencia, ),
+                         GROUP_NO=('N2', 'N3'),
+			 NOM_CHAM=('ACCE',),
+                         RESU_GENE=harm)
+
+
+IMPR_RESU(identifier='23:2',
+          FORMAT='RESULTAT',
+          MODELE=modelV,
+          RESU=_F(FREQ=(masterFrecuencia, ),
+                  GROUP_NO=('N2', 'N3'),
+                  NOM_CHAM=('ACCE', ),
+                  NOM_CMP=('DY', ),
+                  RESULTAT=resHarm),
+          UNITE=80)
+
+FIN()
